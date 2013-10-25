@@ -4,6 +4,8 @@
 ;; a -> b -> c -> d
 ;;  \_______,^
 
+;; > (shortest-path 'a 'd '((a b c) (b c) (c d)))
+;; (A C D)
 (defun shortest-path (start end net)
   (bfs end (list (list start)) net))
 
@@ -24,8 +26,12 @@
             ; not found, search remaining queue.
             (bfs end
                  ; append new-paths to the end of queue, so the deeper node will be visit latter.
-                 (append (cdr path-queue)
-                         (new-paths path node net))
+                 (if (member node (cdr path))
+                     ; if node already in path, a loop occue, throw away this path.
+                     (cdr path-queue)
+                     ; node not in path, continue find next level node.
+                     (append (cdr path-queue)
+                             (new-paths path node net)))
                  net)))))
 
 ;; a new-path is a deeper level path.
