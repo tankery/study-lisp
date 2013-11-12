@@ -10,22 +10,33 @@
 ;;; instertion
 ;;; > (setf nums nil)
 ;;; > (dolist (x '(5 8 4 2 1 9 6 7 3)) (setf nums (bst-insert x nums #'<)))
-;;; > (bst-print nums)
+;;; > (bst-print t nums)
 (defun bst-insert (obj bst <)
   (if (null bst)
       (make-node :elt obj)
-      (let ((elt (node-elt bst)))
-        (if (eql obj elt)
-            bst
-            (if (funcall < obj elt)
-                (make-node
-                  :elt elt
-                  :l   (bst-insert obj (node-l bst) <)
-                  :r   (node-r bst))
-                (make-node
-                  :elt elt
-                  :l   (node-l bst)
-                  :r   (bst-insert obj (node-r bst) <)))))))
+      (let* ((elt (node-elt bst))
+             (sel-left
+               (or (funcall < obj elt)
+                   (and (eql obj elt)
+                        (eql (random 2) 0)))))
+        (if sel-left
+            (make-node
+              :elt elt
+              :l   (bst-insert obj (node-l bst) <)
+              :r   (node-r bst))
+            (make-node
+              :elt elt
+              :l   (node-l bst)
+              :r   (bst-insert obj (node-r bst) <))))))
+
+;;; Copy bst
+(defun bst-copy (bst)
+  (if (null bst)
+      nil
+      (make-node
+        :elt (node-elt bst)
+        :l (bst-copy (node-l bst))
+        :r (bst-copy (node-r bst)))))
 
 ;;; find object in BST
 (defun bst-find (obj bst <)

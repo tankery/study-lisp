@@ -34,7 +34,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 3. copy/find three branches tree
 ;;;
-(defstruct (node)
+(defstruct (node-3)
   elt
   (l nil)
   (m nil)
@@ -45,47 +45,96 @@
 ;;; > (dolist (x '(5 8 4 2 1 9 6 7 3)) (setf nums (tree-3-insert x nums)))
 (defun tree-3-insert (obj tree)
   (if (null tree)
-      (make-node :elt obj)
+      (make-node-3 :elt obj)
       (let ((sel (random 3))
-            (elt (node-elt tree)))
+            (elt (node-3-elt tree)))
         (cond ((eql obj elt)
                tree)
               ((eql sel 0)
-               (make-node
+               (make-node-3
                  :elt elt
-                 :l (tree-3-insert obj (node-l tree))
-                 :m (node-m tree)
-                 :r (node-r tree)))
+                 :l (tree-3-insert obj (node-3-l tree))
+                 :m (node-3-m tree)
+                 :r (node-3-r tree)))
               ((eql sel 1)
-               (make-node
+               (make-node-3
                  :elt elt
-                 :l (node-l tree)
-                 :m (tree-3-insert obj (node-m tree))
-                 :r (node-r tree)))
+                 :l (node-3-l tree)
+                 :m (tree-3-insert obj (node-3-m tree))
+                 :r (node-3-r tree)))
               ((eql sel 2)
-               (make-node
+               (make-node-3
                  :elt elt
-                 :l (node-l tree)
-                 :m (node-m tree)
-                 :r (tree-3-insert obj (node-r tree))))))))
+                 :l (node-3-l tree)
+                 :m (node-3-m tree)
+                 :r (tree-3-insert obj (node-3-r tree))))))))
 
 ;;; Copy tree
 (defun tree-3-copy (tree)
   (if (null tree)
       nil
-      (make-node
-        :elt (node-elt tree)
-        :l (node-l tree)
-        :m (node-m tree)
-        :r (node-r tree))))
+      (make-node-3
+        :elt (node-3-elt tree)
+        :l (tree-3-copy (node-3-l tree))
+        :m (tree-3-copy (node-3-m tree))
+        :r (tree-3-copy (node-3-r tree)))))
 
 ;;; Find object in tree
 (defun tree-3-find (obj tree)
   (if (null tree)
       nil
-      (let ((elt (node-elt tree)))
+      (let ((elt (node-3-elt tree)))
         (if (eql elt obj)
             tree
-            (or (tree-3-find obj (node-l tree))
-                (tree-3-find obj (node-m tree))
-                (tree-3-find obj (node-r tree)))))))
+            (or (tree-3-find obj (node-3-l tree))
+                (tree-3-find obj (node-3-m tree))
+                (tree-3-find obj (node-3-r tree)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 4. expand BST
+;;; > (setf nums nil)
+;;; > (dolist (x '(5 8 4 2 1 9 6 7 3)) (setf nums (bst-insert x nums #'<)))
+;;; > (expand-bst nums #'<)
+;;; (1 2 3 4 5 6 7 8 9)
+;;;
+(load "../example/4.7.binary-search-tree.lisp")
+(defun expand-bst (bst <)
+  (if (null bst)
+      nil
+      (let ((ll (expand-bst (node-l bst) <))
+            (obj (node-elt bst))
+            (rl (expand-bst (node-r bst) <)))
+        (if (null ll)
+            (if (null rl)
+                (list obj)
+                (if (funcall < obj (first rl))
+                    (append (list obj) rl)
+                    (append rl (list obj))))
+            (if (funcall < (first ll) obj)
+                (append ll (list obj) rl)
+                (append rl (list obj) ll))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 5. adjoin BST
+;;; > (setf nums nil)
+;;; > (dolist (x '(5 8 4 5 2 1 9 4 6 7 5 2 3)) (setf nums (bst-adjoin x nums #'<)))
+;;; > (expand-bst nums #'<)
+;;; (1 2 3 4 5 6 7 8 9)
+;;;
+(load "../example/4.7.binary-search-tree.lisp")
+(defun bst-adjoin (obj bst <)
+  (if (null bst)
+      (make-node :elt obj)
+      (let ((elt (node-elt bst)))
+        (if (eql obj elt)
+            bst
+            (if (funcall < obj elt)
+                (make-node
+                  :elt elt
+                  :l   (bst-adjoin obj (node-l bst) <)
+                  :r   (node-r bst))
+                (make-node
+                  :elt elt
+                  :l   (node-l bst)
+                  :r   (bst-adjoin obj (node-r bst) <)))))))
