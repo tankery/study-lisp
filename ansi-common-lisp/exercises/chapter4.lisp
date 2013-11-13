@@ -138,3 +138,30 @@
                   :elt elt
                   :l   (node-l bst)
                   :r   (bst-adjoin obj (node-r bst) <)))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 6. assoc-list and hash table conversion.
+;;;
+
+;;; assoc-list to hash table
+;;; > (assoc-hash '((a . "hello") (b . "world")))
+;;; #S(HASH-TABLE :TEST FASTHASH-EQL (A . "hello") (B . "world"))
+;;;
+(defun assoc-hash (lst)
+  (if (null lst)
+      (make-hash-table)
+      (let ((head (car lst))
+            (ht (assoc-hash (cdr lst))))
+        (setf (gethash (car head) ht) (cdr head))
+        ht)))
+
+;;; hash table to assoc-list
+;;; > (hash-assoc #s(hash-table :test fasthash-eql (a . "hello") (b . "world")))
+;;; ((A . "hello") (B . "world"))
+(defun hash-assoc (ht)
+  (let ((lst nil))
+    (maphash #'(lambda (k v)
+                 (push (cons k v) lst))
+             ht)
+    lst))
